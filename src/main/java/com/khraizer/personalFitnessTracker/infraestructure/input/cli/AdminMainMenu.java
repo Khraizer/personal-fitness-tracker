@@ -12,6 +12,7 @@ import com.khraizer.personalFitnessTracker.application.handler.input.WorkoutExer
 import com.khraizer.personalFitnessTracker.application.handler.input.WorkoutHandlerCli;
 import org.springframework.stereotype.Component;
 
+import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -107,7 +108,7 @@ public class AdminMainMenu {
         try {
             System.out.print("Please, enter the Metabolic Equivalent of Task: ");
             Double met = scanner.nextDouble();
-            scanner.nextLine(); // Clear buffer
+            scanner.nextLine();
 
             exerciseHandlerCli.save(ExerciseRequestDto.builder().name(exerciseName).met(met).build());
             System.out.println("Exercise Registered Successfully!");
@@ -143,7 +144,6 @@ public class AdminMainMenu {
 
         boolean registerProcess = true;
 
-        // Loop to add multiple exercises to the workout
         while (registerProcess) {
             Map<Integer, ExerciseResponseDto> exercisesAvailable = exerciseHandlerCli.findAvailable(searchWorkout);
 
@@ -151,11 +151,27 @@ public class AdminMainMenu {
             exercisesAvailable.forEach((index, exercise) ->
                     System.out.println(index + ". " + exercise.name()));
 
-            System.out.print("Please, select the exercise to add to the workout: ");
-            int exerciseOption = scanner.nextInt();
-            scanner.nextLine(); // Clear buffer
+            ExerciseResponseDto selectedExercise = null;
 
-            ExerciseResponseDto selectedExercise = exercisesAvailable.get(exerciseOption);
+            while (selectedExercise == null) {
+                try {
+                    System.out.print("Please, select the exercise to add to the workout: ");
+                    int exerciseOption = scanner.nextInt();
+                    scanner.nextLine();
+
+                    if (!exercisesAvailable.containsKey(exerciseOption)) {
+                        System.out.println("Invalid Input");
+                        continue;
+                    }
+
+                    selectedExercise = exercisesAvailable.get(exerciseOption);
+
+                } catch (InputMismatchException | NullPointerException e) {
+                    System.out.println("Invalid Input");
+                    scanner.nextLine();
+                }
+            }
+
             ExerciseRequestDto exerciseRequestDto = ExerciseRequestDto.builder()
                     .id(selectedExercise.id())
                     .build();
@@ -170,7 +186,6 @@ public class AdminMainMenu {
             int quantity = scanner.nextInt();
             scanner.nextLine();
 
-            // Save the workout exercise association
             WorkoutExerciseRequestDto workoutExerciseRequestDto = WorkoutExerciseRequestDto.builder()
                     .workout(searchWorkout)
                     .exercise(exerciseRequestDto)
@@ -181,7 +196,6 @@ public class AdminMainMenu {
             workoutExerciseHandlerCli.save(workoutExerciseRequestDto);
             System.out.println("Workout Exercise Registered Successfully!");
 
-            // Ask if another exercise should be added
             System.out.print("Add another? (yes): ");
             String option = scanner.nextLine();
             if (!option.equalsIgnoreCase("yes")) {
