@@ -49,8 +49,6 @@ public class LoginMenu {
             Optional<UserResponseDto> authenticatedUser = userHandlerCli.checkCredentials(email, password);
 
             if (authenticatedUser.isPresent()) {
-                System.out.println(authenticatedUser.get().getRole());
-
                 // Redirect based on user role
                 if (authenticatedUser.get().getRole().equals("Client")) {
                     mainMenu.showMenu(authenticatedUser.get());
